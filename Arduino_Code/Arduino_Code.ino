@@ -41,18 +41,23 @@ volatile unsigned long tagID = 0;
 
 // interrupt to read in zeros
 void isrZero(void) {
+  lastBitArrivalTime = millis();
   if(bitCount >= 14 && bitCount <=33){
-    tagID << 1;
+    tagID = tagID << 1;
   }
   bitCount++;
+  //Serial.println(tagID, BIN);
 }
 
 // interrupt to read in a one
 void isrOne(void) {
+  lastBitArrivalTime = millis();
   if(bitCount >= 14 && bitCount <=33){
-    tagID << 1;
-    tagID |= 1;
+    tagID = tagID << 1;
+    tagID = tagID + 1;
+  
   }
+  //Serial.println(tagID, BIN);
   bitCount++;
 }
 
@@ -99,9 +104,9 @@ void loop(){
   // if we have read in all bits we need from a UW card
   if(bitCount > 0 && (millis() - lastBitArrivalTime) > 250){
     timeKeeper = 0;
-    Serial.println(tagID, DEC);
+    Serial.print(tagID, DEC);
     Serial.print(" bits: ");
-    Serial.println(tagID);
+    Serial.println(tagID, BIN);
     // if we are adding this card
     if (tagID < 10 || bitCount != 35){
       clearAllBuffers();
@@ -129,13 +134,13 @@ void loop(){
   if(readChar != 'r' && readChar != 'n') {
     timeKeeper = 0;
     if ((int)readChar >= (int)'0' && (int)readChar <= (int)'9'){
-      readCode = readCode * 10 + (int)readChar;
+      readCode = readCode * 10 + ((int)readChar - (int)'0');
     } else if (readChar == '#'){
       if (readCode == programModeCode) {
-        programMode != programMode;
+        programMode = 1-programMode;
         deleteMode = false;
       } else if (readCode == deleteModeCode) {
-        deleteMode != deleteMode;
+        deleteMode = 1-deleteMode;
         programMode = false;
       } else {
         //if it is not a valid code, flash red 3 times
@@ -168,11 +173,11 @@ void loop(){
       break;
     case 'p':
       deleteMode = false;
-      programMode != programMode;
+      programMode = 1-programMode;
       break;
     case 'd':
       programMode = false;
-      deleteMode != deleteMode;
+      deleteMode = 1-deleteMode;
       break;
     }
     Serial.print("programMode: ");
@@ -333,46 +338,46 @@ void readFromSD(long unsigned int IDArray[],int* total) {
 char scanKeypad(){
   char returnChar = 'n'; //n for no return
   digitalWrite(COLUMN_ONE, HIGH);
-  if(digitalRead(ROW_ONE)){
+  if(analogRead(ROW_ONE) > 1000){
     returnChar = '1';
   }
-  else if(digitalRead(ROW_TWO)){
+  else if(analogRead(ROW_TWO) > 1000){
     returnChar = '4';
   }
-  else if(digitalRead(ROW_THREE)){
+  else if(analogRead(ROW_THREE) > 1000){
     returnChar = '7';
   }  
-  else if(digitalRead(ROW_FOUR)){
+  else if(analogRead(ROW_FOUR) > 1000){
     returnChar = '*';
   }
   digitalWrite(COLUMN_ONE, LOW);
 
   digitalWrite(COLUMN_TWO, HIGH);
-  if(digitalRead(ROW_ONE)){
+  if(analogRead(ROW_ONE) > 1000){
     returnChar = '2';
   }
-  else if(digitalRead(ROW_TWO)){
+  else if(analogRead(ROW_TWO) > 1000){
     returnChar = '5';
   }
-  else if(digitalRead(ROW_THREE)){
+  else if(analogRead(ROW_THREE) > 1000){
     returnChar = '8';
   }  
-  else if(digitalRead(ROW_FOUR)){
+  else if(analogRead(ROW_FOUR) > 1000){
     returnChar = '0';
   }
   digitalWrite(COLUMN_TWO, LOW);
 
   digitalWrite(COLUMN_THREE, HIGH);
-  if(digitalRead(ROW_ONE)){
+  if(analogRead(ROW_ONE) > 1000){
     returnChar = '3';
   }
-  else if(digitalRead(ROW_TWO)){
+  else if(analogRead(ROW_TWO) > 1000){
     returnChar = '6';
   }
-  else if(digitalRead(ROW_THREE)){
+  else if(analogRead(ROW_THREE) > 1000){
     returnChar = '9';
   }  
-  else if(digitalRead(ROW_FOUR)){
+  else if(analogRead(ROW_FOUR) > 1000){
     returnChar = '#';
   }
   digitalWrite(COLUMN_THREE, LOW);
